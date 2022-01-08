@@ -1,0 +1,4 @@
+[submodule "deps/SameBoy"]
+	path = deps/SameBoy
+	url = https://github.com/LIJI32/SameBoy
+	branch = master
