@@ -3,20 +3,10 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "common.h"
+#include "embed.h"
 #include "get_image_for_rom.h"
-#include "png/lodepng.h"
-
-extern const uint8_t cgb_boot_bin[];
-extern const size_t cgb_boot_bin_size;
-
-extern unsigned char CartridgeTemplate_png[];
-extern unsigned int CartridgeTemplate_png_size;
-
-extern unsigned char ColorCartridgeTemplate_png[];
-extern unsigned int ColorCartridgeTemplate_png_size;
-
-extern unsigned char UniversalCartridgeTemplate_png[];
-extern unsigned int UniversalCartridgeTemplate_png_size;
+#include "image.h"
 
 static uint32_t alpha_blend(const uint32_t dest, const uint32_t src)
 {
@@ -95,16 +85,6 @@ static void scale_image(const uint32_t* input, const signed input_width, const s
     }
 }
 
-static void* local_malloc(size_t size)
-{
-    void* mem = malloc(size);
-    if (!mem) {
-        fprintf(stderr, "Failed to allocate memory\n");
-        exit(-1);
-    }
-    return mem; 
-}
-
 int main (int argc , char** argv)
 {
 #define str(x) #x
@@ -121,7 +101,7 @@ int main (int argc , char** argv)
     const uint16_t X_OFFSET = 192;
     const uint16_t Y_OFFSET = 298;
 
-    unsigned int size = 128;
+    int size = 128;
 
     char* input = NULL;
     char* output = NULL;
@@ -191,11 +171,10 @@ int main (int argc , char** argv)
                 template_size = CartridgeTemplate_png_size;
         }
 
-        if (lodepng_decode32((unsigned char**)&template, &template_width, &template_height, template_data, template_size)) {
+        if (decode32(&template, &template_width, &template_height, template_data, template_size)) {
             fprintf(stderr, "Failed to decode template\n");
             return -1;
         }
-
 
         uint32_t* canvas = local_malloc(template_width * template_height * sizeof(uint32_t));
         // clear the canvas so we don't end up with garbage data somewhere
@@ -224,7 +203,7 @@ int main (int argc , char** argv)
         uint32_t* final = local_malloc(size * size * sizeof(uint32_t));
         scale_image(canvas, template_width, template_height, final, (double)size/template_width, template_width/size);
 
-        lodepng_encode32_file(output, (const unsigned char*)final, size, size);
+        encode32_file(output, final, size, size);
 
         free(final);
         free(canvas);

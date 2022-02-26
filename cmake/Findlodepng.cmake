@@ -1,0 +1,23 @@
+#
+# LODEPNG_INCLUDE_DIRS
+# LODEPNG_LIBRARIES
+# LODEPNG_CFLAGS
+
+
+if(LODEPNG_PATH)
+    return()
+endif()
+
+set(LODEPNG_PATH ${PROJECT_SOURCE_DIR}/deps/lodepng)
+
+list(APPEND
+    LODEPNG_SOURCES
+    ${LODEPNG_PATH}/lodepng.c
+    ${LODEPNG_PATH}/lodepng.h
+)
+
+add_library(lodepng STATIC ${LODEPNG_SOURCES})
+
+set(LODEPNG_INCLUDE_DIRS ${LODEPNG_PATH})
+set(LODEPNG_LIBRARIES lodepng)
+set(LODEPNG_CFLAGS "")

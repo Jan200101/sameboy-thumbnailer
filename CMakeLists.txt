@@ -11,8 +11,12 @@ endif()
 
 project(sameboy-thumbnailer VERSION 0.0.0 LANGUAGES C)
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
+find_package(libpng)
+option(USE_LIBPNG "Use libpng instead of lodepng" ${LIBPNG_FOUND})
+
 add_compile_definitions(VERSION=${CMAKE_PROJECT_VERSION})
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 add_subdirectory(src)

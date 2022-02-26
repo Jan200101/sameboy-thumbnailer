@@ -16,6 +16,7 @@ endif()
 
 
 option(SAMEBOY_STATIC "" ON)
+mark_as_advanced(SAMEBOY_STATIC)
 
 file(GLOB SAMEBOY_CORE_SOURCES ${SAMEBOY_PATH}/Core/*.c)
 

@@ -6,12 +6,14 @@ set(SAMEBOY_BOOTROM_PATH ${SAMEBOY_PATH}/BootROMs)
 
 set(SAMEBOY_BOOTROM_VERSION "cgb_boot" CACHE STRING "")
 set(SAMEBOY_BOOTROM_SIZE "2304" CACHE STRING "")
+mark_as_advanced(SAMEBOY_BOOTROM_VERSION SAMEBOY_BOOTROM_SIZE)
 
 add_executable(pb12 ${SAMEBOY_BOOTROM_PATH}/pb12.c)
 
 find_program(RGBASM rgbasm REQUIRED)
-find_program(RBLINK rgblink REQUIRED)
+find_program(RGBLINK rgblink REQUIRED)
 find_program(RGBGFX rgbgfx REQUIRED)
+mark_as_advanced(RGBASM RGBLINK RGBGFX)
 
 # custom build step
 add_custom_command(
@@ -30,7 +32,7 @@ add_custom_command(
     COMMAND
         ${RGBASM} -o ${SAMEBOY_BOOTROM_VERSION}.tmp ${SAMEBOY_BOOTROM_PATH}/${SAMEBOY_BOOTROM_VERSION}.asm
     COMMAND
-        ${RBLINK} -o ${SAMEBOY_BOOTROM_VERSION}.tmp2 ${SAMEBOY_BOOTROM_VERSION}.tmp
+        ${RGBLINK} -o ${SAMEBOY_BOOTROM_VERSION}.tmp2 ${SAMEBOY_BOOTROM_VERSION}.tmp
     COMMAND
         dd if=${SAMEBOY_BOOTROM_VERSION}.tmp2 of=${SAMEBOY_BOOTROM_VERSION}.bin count=1 bs=${SAMEBOY_BOOTROM_SIZE}
     DEPENDS SameBoyLogo.pb12
