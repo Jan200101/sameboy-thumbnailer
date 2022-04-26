@@ -7,7 +7,7 @@
 
 #include "get_image_for_rom.h"
 
-#define LENGTH 60 * 10
+unsigned int duration = 60*10;
 
 struct local_data {
     unsigned long frames;
@@ -30,10 +30,10 @@ static void vblank(GB_gameboy_t *gb)
 
     struct local_data *local_data = (struct local_data *)GB_get_user_data(gb);
 
-    if (local_data->frames == LENGTH) {
+    if (local_data->frames == duration) {
         local_data->running = false;
     }
-    else if (local_data->frames == LENGTH - 1) {
+    else if (local_data->frames == duration - 1) {
         GB_set_rendering_disabled(gb, false);
     }
 

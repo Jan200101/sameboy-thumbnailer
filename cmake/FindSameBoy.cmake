@@ -11,7 +11,7 @@ endif()
 
 set(SAMEBOY_PATH ${PROJECT_SOURCE_DIR}/deps/SameBoy)
 if(NOT EXISTS ${SAMEBOY_PATH}/README.md)
-    message(FATAL_ERROR "Unable to find SameBoy.\n Make sure to run `git submodule update --init --recursive`")
+    message(FATAL_ERROR "Unable to find SameBoy.\n Make sure to download the submodules")
 endif()
 
 

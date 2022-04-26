@@ -87,10 +87,6 @@ static void scale_image(const uint32_t* input, const signed input_width, const s
 
 int main (int argc , char** argv)
 {
-#define str(x) #x
-#define xstr(x) str(x)
-    fprintf(stderr, "SameBoy Thumbnailer v" xstr(VERSION) "\n");
-
     const uint8_t BITMAP_WIDTH = 160;
     const uint8_t BITMAP_HEIGHT = 144;
     const uint8_t SCALE_MULTIPLIER = 4;
@@ -101,7 +97,7 @@ int main (int argc , char** argv)
     const uint16_t X_OFFSET = 192;
     const uint16_t Y_OFFSET = 298;
 
-    int size = 128;
+    int size = 256;
 
     char* input = NULL;
     char* output = NULL;
@@ -123,6 +119,17 @@ int main (int argc , char** argv)
                 continue;
             }
 
+            if (strcmp(argv[i], "--duration") == 0) {
+                unsigned int arg_dur = atoi(argv[++i]);
+                if (arg_dur < 1) {
+                    fprintf(stderr, "Duration cannot be smaller than 1\n");
+                    return -1;
+                }
+                fprintf(stderr, "Setting duration to %i seconds\n", arg_dur);
+                duration = arg_dur * 60;
+                continue;
+            }
+
             if (strcmp(argv[i], "--boot") == 0) {
                 bootrom_path = argv[++i];
                 fprintf(stderr, "Using boot ROM %s\n", bootrom_path);
@@ -141,76 +148,84 @@ int main (int argc , char** argv)
         }
     }
 
-    if (input && output) {
-        uint32_t bitmap[BITMAP_WIDTH*BITMAP_HEIGHT];
-        uint8_t cgbFlag = 0;
-
-        if (bootrom_path ? get_image_for_rom(input, bootrom_path, bitmap, &cgbFlag)
-                         : get_image_for_rom_alt(input, bootrom, bootrom_size, bitmap, &cgbFlag)) {
-            return -1;
-        }
-
-        unsigned template_width, template_height;
-        uint32_t* template;
-        unsigned char* template_data;
-        size_t template_size;
-
-        switch (cgbFlag) {
-            case 0xC0:
-                template_data = ColorCartridgeTemplate_png;
-                template_size = ColorCartridgeTemplate_png_size;
-                break;
-
-            case 0x80:
-                template_data = UniversalCartridgeTemplate_png;
-                template_size = UniversalCartridgeTemplate_png_size;
-                break;
-
-            default:
-                template_data = CartridgeTemplate_png;
-                template_size = CartridgeTemplate_png_size;
-        }
-
-        if (decode32(&template, &template_width, &template_height, template_data, template_size)) {
-            fprintf(stderr, "Failed to decode template\n");
-            return -1;
-        }
-
-        uint32_t* canvas = local_malloc(template_width * template_height * sizeof(uint32_t));
-        // clear the canvas so we don't end up with garbage data somewhere
-        memset(canvas, 0, template_width * template_height * sizeof(uint32_t));
-
-        uint32_t* screen = local_malloc(UPSCALED_WIDTH * UPSCALED_HEIGHT * sizeof(uint32_t));
-        scale_image(bitmap, BITMAP_WIDTH, BITMAP_HEIGHT, screen, SCALE_MULTIPLIER, 1);
-
-        for (signed y = 0; y < UPSCALED_HEIGHT; y++) {
-            for (signed x = 0; x < UPSCALED_WIDTH; x++) {
-                canvas[x + X_OFFSET + ((y + Y_OFFSET) * template_height)] = screen[x + (y * UPSCALED_WIDTH)];
-            }
-        }
-
-        free(screen);
-
-        for (signed y = 0; y < template_height; y++) {
-            for (signed x = 0; x < template_width; x++) {
-                canvas[x + (y * template_width)] = alpha_blend(
-                    canvas[x + (y * template_width)],
-                    template[x + (y * template_width)]
-                );
-            }
-        }
-
-        uint32_t* final = local_malloc(size * size * sizeof(uint32_t));
-        scale_image(canvas, template_width, template_height, final, (double)size/template_width, template_width/size);
-
-        encode32_file(output, final, size, size);
-
-        free(final);
-        free(canvas);
-        free(template);
-    }
-    else
+    if (!input || !output)
     {
-        fprintf(stderr, "Usage: %s [--size size of output] [--boot path to boot ROM] input output...\n", argv[0]);
+        fprintf(stderr,
+            "Usage: %s input output [options]\n"
+            "\n"
+            "Options:\n"
+            "\t--size [%i]\t\tset the size of the emulated screen\n"
+            "\t--duration [%i]\tset duration of emulation in seconds\n"
+            "\t--boot [path]\tspecify an external bootrom\n",
+            argv[0], size, duration/10);
+
+        return 0;
     }
+
+    uint32_t bitmap[BITMAP_WIDTH*BITMAP_HEIGHT];
+    uint8_t cgbFlag = 0;
+
+    if (bootrom_path ? get_image_for_rom(input, bootrom_path, bitmap, &cgbFlag)
+                     : get_image_for_rom_alt(input, bootrom, bootrom_size, bitmap, &cgbFlag)) {
+        return -1;
+    }
+
+    unsigned template_width, template_height;
+    uint32_t* template;
+    unsigned char* template_data;
+    size_t template_size;
+
+    switch (cgbFlag) {
+        case 0xC0:
+            template_data = ColorCartridgeTemplate_png;
+            template_size = ColorCartridgeTemplate_png_size;
+            break;
+
+        case 0x80:
+            template_data = UniversalCartridgeTemplate_png;
+            template_size = UniversalCartridgeTemplate_png_size;
+            break;
+
+        default:
+            template_data = CartridgeTemplate_png;
+            template_size = CartridgeTemplate_png_size;
+    }
+
+    if (decode32(&template, &template_width, &template_height, template_data, template_size)) {
+        fprintf(stderr, "Failed to decode template\n");
+        return -1;
+    }
+
+    uint32_t* canvas = local_malloc(template_width * template_height * sizeof(uint32_t));
+    // clear the canvas so we don't end up with garbage data somewhere
+    memset(canvas, 0, template_width * template_height * sizeof(uint32_t));
+
+    uint32_t* screen = local_malloc(UPSCALED_WIDTH * UPSCALED_HEIGHT * sizeof(uint32_t));
+    scale_image(bitmap, BITMAP_WIDTH, BITMAP_HEIGHT, screen, SCALE_MULTIPLIER, 1);
+
+    for (signed y = 0; y < UPSCALED_HEIGHT; y++) {
+        for (signed x = 0; x < UPSCALED_WIDTH; x++) {
+            canvas[x + X_OFFSET + ((y + Y_OFFSET) * template_height)] = screen[x + (y * UPSCALED_WIDTH)];
+        }
+    }
+
+    free(screen);
+
+    for (signed y = 0; y < template_height; y++) {
+        for (signed x = 0; x < template_width; x++) {
+            canvas[x + (y * template_width)] = alpha_blend(
+                canvas[x + (y * template_width)],
+                template[x + (y * template_width)]
+            );
+        }
+    }
+
+    uint32_t* final = local_malloc(size * size * sizeof(uint32_t));
+    scale_image(canvas, template_width, template_height, final, (double)size/template_width, template_width/size);
+
+    encode32_file(output, final, size, size);
+
+    free(final);
+    free(canvas);
+    free(template);
 }

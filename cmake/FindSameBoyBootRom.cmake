@@ -13,7 +13,8 @@ add_executable(pb12 ${SAMEBOY_BOOTROM_PATH}/pb12.c)
 find_program(RGBASM rgbasm REQUIRED)
 find_program(RGBLINK rgblink REQUIRED)
 find_program(RGBGFX rgbgfx REQUIRED)
-mark_as_advanced(RGBASM RGBLINK RGBGFX)
+find_program(DD dd REQUIRED)
+mark_as_advanced(RGBASM RGBLINK RGBGFX DD)
 
 # custom build step
 add_custom_command(
@@ -34,7 +35,7 @@ add_custom_command(
     COMMAND
         ${RGBLINK} -o ${SAMEBOY_BOOTROM_VERSION}.tmp2 ${SAMEBOY_BOOTROM_VERSION}.tmp
     COMMAND
-        dd if=${SAMEBOY_BOOTROM_VERSION}.tmp2 of=${SAMEBOY_BOOTROM_VERSION}.bin count=1 bs=${SAMEBOY_BOOTROM_SIZE}
+        ${DD} if=${SAMEBOY_BOOTROM_VERSION}.tmp2 of=${SAMEBOY_BOOTROM_VERSION}.bin count=1 bs=${SAMEBOY_BOOTROM_SIZE}
     DEPENDS SameBoyLogo.pb12
     VERBATIM
 )
