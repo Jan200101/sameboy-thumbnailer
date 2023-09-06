@@ -20,7 +20,7 @@ mark_as_advanced(RGBASM RGBLINK RGBGFX DD)
 add_custom_command(
     OUTPUT SameBoyLogo.pb12
     COMMAND
-        ${RGBGFX} -h -u -o SameBoyLogo.2bpp ${SAMEBOY_BOOTROM_PATH}/SameBoyLogo.png
+        ${RGBGFX} -Z -u -c embedded -o SameBoyLogo.2bpp ${SAMEBOY_BOOTROM_PATH}/SameBoyLogo.png
     COMMAND
         pb12 < SameBoyLogo.2bpp > SameBoyLogo.pb12
     MAIN_DEPENDENCY ${SAMEBOY_BOOTROM_PATH}/SameBoyLogo.png
@@ -31,7 +31,7 @@ add_custom_command(
 add_custom_command(
     OUTPUT ${SAMEBOY_BOOTROM_VERSION}.bin
     COMMAND
-        ${RGBASM} -o ${SAMEBOY_BOOTROM_VERSION}.tmp ${SAMEBOY_BOOTROM_PATH}/${SAMEBOY_BOOTROM_VERSION}.asm
+        ${RGBASM} -i ${SAMEBOY_BOOTROM_PATH} -o ${SAMEBOY_BOOTROM_VERSION}.tmp ${SAMEBOY_BOOTROM_PATH}/${SAMEBOY_BOOTROM_VERSION}.asm
     COMMAND
         ${RGBLINK} -o ${SAMEBOY_BOOTROM_VERSION}.tmp2 ${SAMEBOY_BOOTROM_VERSION}.tmp
     COMMAND
