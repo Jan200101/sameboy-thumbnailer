@@ -58,8 +58,11 @@ static uint32_t average(const uint32_t dest, const uint32_t src)
 }
 
 static void scale_image(const uint32_t* input, const signed input_width, const signed input_height,
-                        uint32_t* output, const double multiplier, const signed samples)
+                        uint32_t* output, const double multiplier, signed samples)
 {
+    if (samples <= 0)
+        samples = 1;
+
     signed output_width = input_width * multiplier;
     uint32_t pixel;
 
